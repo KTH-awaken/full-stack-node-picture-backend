@@ -2,10 +2,10 @@ const mysql = require('mysql2');
 const multer = require('multer');
 const express = require('express');
 const cors = require('cors'); // Import the cors middleware
+const { format } = require('date-fns');
 
 
 const app = express();
-// app.use(cors()); // Enable CORS for all routes
 app.use(cors({ origin: '*' }));
 
 
@@ -13,10 +13,10 @@ app.use(cors({ origin: '*' }));
 app.use(express.json());
 
 
-
-// Configure multer for file uploads
 const storage = multer.memoryStorage(); // Use memory storage for storing file buffers
+
 const upload = multer({ storage: storage });
+const replace = multer({ storage: storage });
 
 // MySQL config
 const pool = mysql.createPool({
@@ -40,12 +40,12 @@ app.get('/api/pictures', (req, res) => {
   });
 });
 
-//get pictures by patient id
-app.get('/api/get-pictures/:patientId', (req, res) => {
-  const patientId = req.params.patientId;
-  console.log('in get by id id: '+patientId)
+//Get pictures by patient id
+app.get('/api/get-pictures/:patientEmail', (req, res) => {
+  const patientEmail = req.params.patientEmail;
+  console.log('in get by id id: '+patientEmail)
 
-  pool.query('SELECT * FROM pictures WHERE patientEmail = ?', [patientId], (error, results, fields) => {
+  pool.query('SELECT * FROM pictures WHERE patientEmail = ?', [patientEmail], (error, results, fields) => {
     if (error) {
       return res.status(500).json({ error: 'Failed to fetch pictures from the database' });
     }
@@ -54,16 +54,9 @@ app.get('/api/get-pictures/:patientId', (req, res) => {
   });
 });
 
-// POST route for uploading a picture
-const { format } = require('date-fns');
+// POST 
 app.post('/api/upload-picture', upload.single('picture'), (req, res) => {
-  // Ensure that req.file is defined before accessing its properties
-  // console.log('Request Body:', req.body);
-  // if (!req.file) {
-  //   return res.status(400).json({ error: 'No file uploaded' });
-  // }
-
-  // const picture_data_base64 = req.file.buffer.toString('base64');
+  console.log("in upload")
   const picture_data_base64 = req.body.picture_data_base64;
   const patientEmail = req.body.patientEmail;
   const doctorEmail = req.body.doctorEmail;
@@ -71,15 +64,39 @@ app.post('/api/upload-picture', upload.single('picture'), (req, res) => {
   console.log(req)
   console.log(req.body)
 
-  // Perform the database insertion
   pool.query('INSERT INTO pictures (picture_data_base64, patientEmail, doctorEmail, date) VALUES (?, ?, ?, ?)', [picture_data_base64, patientEmail, doctorEmail, date], (error, results, fields) => {
     if (error) {
       console.log(error)
       return res.status(500).json({ error: 'Failed to insert picture into the database' });
     }
-
+  
     res.json({ success: true });
   });
+});
+
+//POST REPLACE
+app.post('/api/replace-picture', replace.single('picture'), (req, res) => {
+  console.log("in replace")
+    const id = req.body.id;
+    const picture_data_base64 = req.body.picture_data_base64;
+    const patientEmail = req.body.patientEmail;
+    const doctorEmail = req.body.doctorEmail;
+    const date = format(new Date(req.body.date), 'yyyy-MM-dd HH:mm:ss');
+    console.log("in replace")
+    // console.log(req)
+    // console.log(req.body)
+
+    pool.query('UPDATE db.pictures SET picture_data_base64 = ?, patientEmail = ?, doctorEmail = ?, date = ? WHERE id = ?',
+    [picture_data_base64, patientEmail, doctorEmail, date, id],
+    (error, results, fields) => {
+      if (error) {
+        console.log(error);
+        return res.status(500).json({ error: 'Failed to update picture in the database' });
+      }
+
+      res.json({ success: true });
+    }
+  );
 });
 
 
@@ -101,7 +118,6 @@ app.post('/api/upload-picture', upload.single('picture'), (req, res) => {
     });
   });
   
-  //cors config
 
   
   
