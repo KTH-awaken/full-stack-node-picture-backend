@@ -29,7 +29,7 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
-//get all pictures
+//get all pictures only for testing
 app.get('/api/pictures', (req, res) => {
   console.log('in get')
   pool.query('SELECT * FROM pictures', (error, results, fields) => {
