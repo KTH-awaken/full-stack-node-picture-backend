@@ -1,7 +1,7 @@
 const mysql = require('mysql2');
 const multer = require('multer');
 const express = require('express');
-const cors = require('cors'); // Import the cors middleware
+const cors = require('cors'); 
 const { format } = require('date-fns');
 
 
@@ -9,18 +9,18 @@ const app = express();
 app.use(cors({ origin: '*' }));
 
 
-// middleware to parse JSON
 app.use(express.json());
 
 
-const storage = multer.memoryStorage(); // Use memory storage for storing file buffers
+const storage = multer.memoryStorage();
 
 const upload = multer({ storage: storage });
 const replace = multer({ storage: storage });
 
 // MySQL config
 const pool = mysql.createPool({
-  host: 'localhost',
+  // host: 'localhost',fungerar när node inte va i container
+  host: 'mysql',// namn på db service
   user: 'root',
   password: 'root',
   database: 'db',
@@ -43,7 +43,6 @@ app.get('/api/pictures', (req, res) => {
 //Get pictures by patient id
 app.get('/api/get-pictures/:patientEmail', (req, res) => {
   const patientEmail = req.params.patientEmail;
-  console.log('in get by id id: '+patientEmail)
 
   pool.query('SELECT * FROM pictures WHERE patientEmail = ?', [patientEmail], (error, results, fields) => {
     if (error) {
@@ -76,15 +75,11 @@ app.post('/api/upload-picture', upload.single('picture'), (req, res) => {
 
 //POST REPLACE
 app.post('/api/replace-picture', replace.single('picture'), (req, res) => {
-  console.log("in replace")
     const id = req.body.id;
     const picture_data_base64 = req.body.picture_data_base64;
     const patientEmail = req.body.patientEmail;
     const doctorEmail = req.body.doctorEmail;
     const date = format(new Date(req.body.date), 'yyyy-MM-dd HH:mm:ss');
-    console.log("in replace")
-    // console.log(req)
-    // console.log(req.body)
 
     pool.query('UPDATE db.pictures SET picture_data_base64 = ?, patientEmail = ?, doctorEmail = ?, date = ? WHERE id = ?',
     [picture_data_base64, patientEmail, doctorEmail, date, id],
