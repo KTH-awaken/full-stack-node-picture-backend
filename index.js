@@ -40,7 +40,7 @@ app.get('/api/pictures', (req, res) => {
   });
 });
 
-//Get pictures by patient id
+//Get pictures by patient email
 app.get('/api/get-pictures/:patientEmail', (req, res) => {
   const patientEmail = req.params.patientEmail;
 
