@@ -20,14 +20,18 @@ const replace = multer({ storage: storage });
 // MySQL config
 const pool = mysql.createPool({
   // host: 'localhost', //fungerar när node inte va i container
-  host: 'mysql',// namn på db service
-  user: 'root',
-  password: 'root',
+  host: 'vm.cloud.cbh.kth.se',// namn på db service
+  port: 2528,
+  user: 'admin',
+  password: 'admin',
   database: 'db',
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
 });
+
+
+
 
 //get all pictures only for testing
 app.get('/api/pictures', (req, res) => {
@@ -105,6 +109,7 @@ app.get('/test-db-connection', (req, res) => {
   console.log('in test connection')
   pool.query('SELECT 1 + 1 AS result', (error, results, fields) => {
     if (error) {
+      console.error(error);
       return res.status(500).json({ error: 'Database Error' });
     }
 
